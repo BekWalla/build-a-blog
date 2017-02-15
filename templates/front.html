@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Blogging</title>
+    </head>
+
+    <body>
+     <h1>Bex Blogging</h1>
+
+     <form method = "post">
+         <label>
+             <div>Title</div>
+             <input type = "text" name = "title" value = {{title}}>
+             <div> Blog Entry </div>
+             <textarea name = "blog_entry">{{blog_entry}}</textarea>
+         </label>
+
+         <div class = "error">{{error}}</div>
+
+         <input type = "submit">
+    </body>
+</html>

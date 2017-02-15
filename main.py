@@ -15,11 +15,42 @@
 # limitations under the License.
 #
 import webapp2
+import os
+import jinja2
 
-class MainHandler(webapp2.RequestHandler):
+from google.appengine.ext import db
+template_dir = os.path.join(os.path.dirname(__file__), "templates")
+jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
+                               autoescape = True)
+
+class Handler(webapp2.RequestHandler):
+    def write(self, *a, **kw):
+        self.response.out.write(*a, **kw)
+
+    def render_str(self, template, **params):
+        t = jinja_env.get_template(template)
+        return t.render(params)
+
+    def render(self, template, **kw):
+        self.write(self.render_str(template, **kw))
+
+class MainPage(Handler):
+    def render_front(self, title="", blog_entry="", error=""):
+        self.render("front.html", title = title, blog_entry = blog_entry, error = error)
+
     def get(self):
-        self.response.write('Hello world!')
+        self.render_front()
+
+    def post(self):
+        title = self.request.get("title")
+        blog_entry = self.request.get("blog_entry")
+
+        if title and blog_entry:
+            self.write("Thank you for your submission.")
+        else:
+            error = ("Please enter a title and an entry.")
+            self.render_front(title, blog_entry, error)
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', MainPage)
 ], debug=True)
