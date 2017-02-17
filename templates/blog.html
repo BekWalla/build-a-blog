@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action="/blog" method="post">
+    <a href="/blog/"{{postno}}>{{blog_entry(title)}}</a>
+{% endblock %}

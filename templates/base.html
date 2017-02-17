@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Build-A-Blog</title>
+        <style type="text/css">
+            .error {
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>
+            <a href="/blog">Bex Blogging</a>
+        </h1>
+        <ul>
+            <li><a href="/newpost">Add a New Post</a></li>
+        </ul>
+
+        {% block content %}
+        {% endblock %}
+
+    </body>
+</html>
