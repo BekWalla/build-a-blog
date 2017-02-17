@@ -23,21 +23,33 @@ template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
 
-class blog_post(db.Model):
+def render_str(template, **params):
+    t = jinja_env.get_template(template)
+    return t.render(params)
+
+class BlogPost(db.Model):
     title = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     entry = db.TextProperty(required = True)
+
+    def render(self):
+        self._render_text = self.entry.replace('\n', '<br>')
+        return render_str("post.html", blog_post = self)
 
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
 
+    def render(self, template, **kw):
+        self.write(self.render_str(template, **kw))
+
     def render_str(self, template, **params):
         t = jinja_env.get_template(template)
         return t.render(params)
 
-    def render(self, template, **kw):
-        self.write(self.render_str(template, **kw))
+def render_post (response, post):
+    response.out.write(post.title + '<br>')
+    response.out.write(post.entry)
 
 class NewPost(Handler):
     """ Handles requests coming in to '/newpost'
@@ -52,50 +64,37 @@ class NewPost(Handler):
     def post(self):
         title = self.request.get("title")
         entry = self.request.get("entry")
-        blog_post = title + entry + created
 
         if title and entry:
-            blog_post_id = self.request.get("blog_post")
-            blog_post = blog_post.get_by_id( int(blog_post_id) )
+            blog_post = BlogPost(title = title, entry = entry)
             blog_post.put()
-            self.redirect("/blog")
+            self.redirect("/blog/%s" % str(blog_post.key().id()))
         else:
             error = ("Please enter a title and an entry.")
-            self.render_front(title, blog_entry, error)
+            self.render_front(title, entry, error)
 
 class MainPage(Handler):
     """ Handles requests coming in to '/blog'
         e.g. www.bexblogging.com/blog
     """
     def get(self):
-        blog_post_id = self.request.get("blog_entry")
-        blog_post = blog_post.get_by_id( int(blog_post_id) )
-        blog_post.put()
-        blog_post = db.GqlQuery("SELECT * FROM blog_post ORDER BY created DESC LIMIT 5")
-        t = jinja_env.get_template("blog.html")
-        content = t.render(blog_post = blog_post)
-        self.response.write(content)
+        posts = db.GqlQuery("SELECT * FROM BlogPost ORDER BY created DESC LIMIT 5")
+        self.render("blog.html", posts = posts)
 
-    def post(self):
-        blog_post_id = self.request.get("blog_post")
-        blog_post = blog_post.get_by_id( int(blog_post_id) )
-        blog_post.put()
-        blog_entry = db.GqlQuery("SELECT * FROM blog_post ORDER BY created DESC LIMIT 5")
-        t = jinja_env.get_template("blog.html")
-        content = t.render(blog_post = blog_post)
-        self.response.write(content)
+class ViewPostHandler(Handler):
+    def get(self, post_id):
+        key = db.Key.from_path("BlogPost", int(post_id))
+        post = db.get(key)
 
-class ViewPostHandler(webapp2.RequestHandler):
-    def get(self, id):
-        if not id:
+        if not post:
             error = ("Sorry, there is no blog entry here.")
+            return
         else:
-            content = Post.get_by_id
-            self.response.write(content)
+            self.render("permalink.html", blog_post = post)
 
 app = webapp2.WSGIApplication([
-    ('/', NewPost),
+    ('/', MainPage),
     ('/blog', MainPage),
     ('/newpost', NewPost),
-    webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
+    ('/blog/([0-9]+)', ViewPostHandler)
 ], debug=True)
