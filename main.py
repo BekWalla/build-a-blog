@@ -56,7 +56,7 @@ class NewPost(Handler):
         e.g. www.bexblogging.com/newpost
     """
     def render_front(self, title="", entry="", error=""):
-        self.render("front.html", title = title, entry = entry, error = error)
+        self.render("newpost.html", title = title, entry = entry, error = error)
 
     def get(self):
         self.render_front()
@@ -91,6 +91,7 @@ class ViewPostHandler(Handler):
             return
         else:
             self.render("permalink.html", blog_post = post)
+
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),

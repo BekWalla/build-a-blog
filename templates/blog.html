@@ -2,7 +2,7 @@
 
 {% block content %}
     {%for blog_post in posts %}
-     {{ blog_post.render()  | safe }}
+    <a href = "/blog/{{blog_post.key().id()}}">{{blog_post.title}} </a>
      <br><br>
     {% endfor %}
 
